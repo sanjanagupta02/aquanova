@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AquaNova">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAwtklEQVR42u3de5RfVZUncNayUlWpvOqV">
+<title>AquaNova</title>
+<style>
+:root {
+  --bg: #04040e;
+  --bg2: #0a0a1c;
+  --surface: rgba(255,255,255,0.07);
+  --surface2: rgba(255,255,255,0.13);
+  --border: rgba(255,255,255,0.1);
+  --text: #e2e2f6;
+  --text2: #7878a8;
+  --accent: #4a9eff;
+  --green: #44dd88;
+  --danger: #ff4455;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+  --nav-h: 56px;
+  --hdr-h: 50px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body { height:100%; overflow:hidden; background:var(--bg); }
+
+body {
+  font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color:var(--text);
+  font-size:15px;
+}
+
+/* HEADER */
+.hdr {
+  position:fixed; top:0; left:0; right:0;
+  height:calc(var(--hdr-h) + var(--safe-top));
+  padding-top:var(--safe-top);
+  background:rgba(4,4,14,0.92);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding-left:18px; padding-right:18px;
+  z-index:100;
+}
+
+.app-title {
+  font-size:18px; font-weight:700; letter-spacing:-0.4px;
+  background:linear-gradient(130deg,#a0c8ff 0%,#d4a8ff 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.icon-btn {
+  background:none; border:none; color:var(--text2);
+  font-size:19px; cursor:pointer; padding:6px;
+  border-radius:8px; line-height:1;
+}
+.icon-btn:active { background:var(--surface); }
+
+/* BOTTOM NAV */
+.nav {
+  position:fixed; bottom:0; left:0; right:0;
+  height:calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);
+  background:rgba(4,4,14,0.94);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  display:flex; align-items:flex-start;
+  z-index:100;
+}
+
+.nav-item {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  height:var(--nav-h); gap:3px;
+  background:none; border:none; color:var(--text2);
+  cursor:pointer; transition:color 0.2s; font-family:inherit;
+}
+.nav-item.active { color:var(--accent); }
+.nav-item svg { width:22px; height:22px; }
+.nav-item span { font-size:10px; font-weight:500; }
+
+/* VIEWS */
+.view {
+  position:fixed;
+  top:calc(var(--hdr-h) + var(--safe-top));
+  bottom:calc(var(--nav-h) + var(--safe-bottom));
+  left:0; right:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  display:none;
+}
+.view.active { display:block; }
+
+/* TODAY VIEW */
+#vToday.active { display:flex; flex-direction:column; align-items:center; }
+
+.star-wrap {
+  width:100%; max-width:300px;
+  margin:10px auto 0;
+  padding:0 20px;
+}
+.star-svg { width:100%; aspect-ratio:1; display:block; border-radius:14px; overflow:hidden; }
+
+.stage-info { text-align:center; margin-top:6px; }
+.stage-name {
+  font-size:11px; font-weight:700; color:var(--text2);
+  text-transform:uppercase; letter-spacing:1.2px;
+}
+
+.progress-wrap { text-align:center; margin:8px 0 6px; }
+.prog-num {
+  font-size:38px; font-weight:700; letter-spacing:-1.5px; color:var(--text);
+  font-variant-numeric:tabular-nums;
+}
+.prog-unit { font-size:17px; color:var(--text2); }
+.prog-goal { font-size:13px; color:var(--text2); margin-top:1px; }
+
+.today-log { width:100%; padding:10px 16px 20px; }
+.log-hdr {
+  font-size:11px; font-weight:700; color:var(--text2);
+  text-transform:uppercase; letter-spacing:0.8px;
+  margin-bottom:8px; padding:0 2px;
+}
+.log-empty {
+  text-align:center; color:var(--text2);
+  font-size:14px; padding:24px 20px; line-height:1.6;
+}
+
+.log-item {
+  display:flex; align-items:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  margin-bottom:7px;
+  gap:10px;
+}
+.log-emoji { font-size:21px; flex-shrink:0; }
+.log-info { flex:1; min-width:0; }
+.log-name { font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.log-time { font-size:12px; color:var(--text2); margin-top:1px; }
+.log-right { text-align:right; flex-shrink:0; }
+.log-amount { font-size:14px; font-weight:600; }
+.log-net { font-size:11px; color:var(--text2); margin-top:1px; }
+
+/* ADD VIEW */
+#vAdd.active { display:flex; flex-direction:column; }
+
+.add-controls {
+  position:sticky; top:0;
+  background:var(--bg);
+  z-index:10;
+  padding-bottom:2px;
+}
+
+.search-bar { padding:10px 16px 6px; }
+.search-input {
+  width:100%; background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px; padding:9px 14px;
+  color:var(--text); font-size:15px;
+  outline:none; font-family:inherit;
+}
+.search-input::placeholder { color:var(--text2); }
+.search-input:focus { border-color:var(--accent); }
+
+.cats {
+  padding:0 16px 8px;
+  overflow-x:auto; display:flex; gap:7px;
+  scrollbar-width:none;
+}
+.cats::-webkit-scrollbar { display:none; }
+
+.cat-pill {
+  flex-shrink:0; background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px; padding:6px 13px;
+  font-size:13px; font-weight:500; color:var(--text2);
+  cursor:pointer; white-space:nowrap;
+  font-family:inherit;
+}
+.cat-pill.active {
+  background:var(--accent); border-color:var(--accent); color:#fff;
+}
+
+.bev-list { flex:1; overflow-y:auto; padding:0 16px 16px; }
+
+.bev-item {
+  display:flex; align-items:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px; padding:11px 13px;
+  margin-bottom:7px; gap:11px;
+  cursor:pointer; transition:background 0.15s, border-color 0.15s;
+}
+.bev-item:active { background:var(--surface2); }
+.bev-item.selected { border-color:var(--accent); background:rgba(74,158,255,0.1); }
+
+.bev-emoji { font-size:22px; flex-shrink:0; }
+.bev-name { flex:1; font-size:14px; font-weight:500; line-height:1.3; }
+
+.f-badge {
+  flex-shrink:0; font-size:11px; font-weight:700;
+  padding:3px 7px; border-radius:7px;
+}
+.f-great  { background:rgba(68,221,136,0.18); color:#44dd88; }
+.f-good   { background:rgba(130,200,80,0.18); color:#82c850; }
+.f-ok     { background:rgba(255,204,68,0.18); color:#ffcc44; }
+.f-poor   { background:rgba(255,136,51,0.18); color:#ff8833; }
+.f-bad    { background:rgba(255,80,80,0.18); color:#ff5050; }
+.f-neg    { background:rgba(200,40,40,0.2); color:#ff3333; }
+
+/* ADD PANEL */
+.add-panel {
+  position:fixed; bottom:0; left:0; right:0;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  border-radius:20px 20px 0 0;
+  padding:14px 20px calc(var(--nav-h) + var(--safe-bottom) + 10px);
+  transform:translateY(100%);
+  transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  z-index:150;
+}
+.add-panel.open { transform:translateY(0); }
+
+.panel-handle {
+  width:36px; height:4px; background:var(--border);
+  border-radius:2px; margin:0 auto 14px;
+}
+.panel-bev { font-size:17px; font-weight:700; margin-bottom:3px; }
+.panel-factor { font-size:13px; color:var(--text2); margin-bottom:14px; }
+
+.amount-row { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+
+.amount-input {
+  flex:1; background:var(--surface);
+  border:1px solid var(--border); border-radius:12px;
+  padding:12px 16px; font-size:22px; font-weight:700;
+  color:var(--text); text-align:center;
+  outline:none; font-family:inherit;
+}
+.amount-input:focus { border-color:var(--accent); }
+
+.unit-tog {
+  display:flex; background:var(--surface);
+  border:1px solid var(--border); border-radius:10px; overflow:hidden;
+}
+.unit-btn {
+  padding:10px 14px; background:none; border:none;
+  color:var(--text2); font-size:14px; font-weight:600;
+  cursor:pointer; font-family:inherit;
+}
+.unit-btn.active { background:var(--accent); color:#fff; }
+
+.net-preview { font-size:13px; color:var(--text2); min-height:18px; margin-bottom:13px; }
+.net-pos { color:var(--green); font-weight:600; }
+.net-neg { color:var(--danger); font-weight:600; }
+
+.add-btn {
+  width:100%; background:var(--accent); border:none;
+  border-radius:14px; padding:14px; font-size:16px; font-weight:700;
+  color:#fff; cursor:pointer; font-family:inherit;
+  transition:opacity 0.15s;
+}
+.add-btn:active { opacity:0.8; }
+
+/* BACKDROP */
+.backdrop {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0);
+  z-index:140; pointer-events:none;
+  transition:background 0.3s;
+}
+.backdrop.show { background:rgba(0,0,0,0.45); pointer-events:all; }
+
+/* HISTORY VIEW */
+#vHistory { padding:0; }
+
+.month-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px 10px;
+}
+.month-lbl { font-size:17px; font-weight:700; }
+.month-btn {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; width:34px; height:34px;
+  color:var(--text); font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+
+.day-hdrs {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  padding:0 12px; margin-bottom:4px;
+}
+.day-hdr {
+  text-align:center; font-size:11px; font-weight:700;
+  color:var(--text2); text-transform:uppercase; letter-spacing:0.5px;
+  padding:3px 0;
+}
+
+.cal-grid {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  padding:0 12px; gap:3px;
+}
+.cal-day {
+  aspect-ratio:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  border-radius:9px; cursor:pointer;
+  position:relative; font-size:13px;
+  background: rgba(255,255,255,0.04);
+}
+.cal-day.empty { cursor:default; background:transparent; }
+.cal-day.future { opacity:0.25; cursor:default; }
+.cal-day-n { font-size:13px; font-weight:500; }
+.cal-dot { width:4px; height:4px; border-radius:2px; margin-top:2px; }
+
+.cal-legend {
+  display:flex; flex-wrap:wrap; gap:6px 14px;
+  padding:14px 14px 8px; font-size:11px; color:var(--text2);
+}
+.leg-item { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+
+/* MODALS */
+.modal {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.6);
+  z-index:200; display:flex; align-items:flex-end;
+}
+.modal.hidden { display:none; }
+
+.modal-sheet {
+  background:var(--bg2);
+  border-radius:20px 20px 0 0;
+  padding:14px 20px calc(var(--safe-bottom) + 20px);
+  width:100%; max-height:88vh; overflow-y:auto;
+}
+.modal-title {
+  font-size:18px; font-weight:700; margin-bottom:18px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:13px 0; border-bottom:1px solid var(--border);
+}
+.setting-lbl { font-size:15px; }
+.setting-val { display:flex; align-items:center; gap:8px; color:var(--text2); }
+.goal-input {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:8px; padding:6px 10px; color:var(--text);
+  font-size:15px; font-weight:600; width:78px;
+  text-align:center; outline:none; font-family:inherit;
+}
+.goal-input:focus { border-color:var(--accent); }
+.settings-about {
+  margin-top:18px; color:var(--text2); font-size:12px;
+  text-align:center; line-height:1.7;
+}
+
+.reset-btn {
+  background:rgba(255,68,85,0.12); border:1px solid rgba(255,68,85,0.28);
+  color:var(--danger); padding:6px 14px; border-radius:8px;
+  font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.reset-btn:active { background:rgba(255,68,85,0.22); }
+
+/* Tab-specific background tints */
+#vToday   { background: linear-gradient(180deg, rgba(45,10,100,0.20) 0%, transparent 280px) var(--bg); }
+#vAdd     { background: linear-gradient(180deg, rgba(10,35,100,0.22) 0%, transparent 220px) var(--bg); }
+#vHistory { background: linear-gradient(180deg, rgba(0,55,70,0.28) 0%, transparent 220px) var(--bg); }
+
+.day-modal-date { font-size:14px; color:var(--text2); margin-bottom:8px; }
+.day-modal-total { font-size:26px; font-weight:700; margin-bottom:14px; }
+.day-modal-list { display:flex; flex-direction:column; gap:7px; }
+.day-modal-item {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface); border-radius:10px; padding:10px 12px;
+}
+
+/* TOAST */
+.toast {
+  position:fixed;
+  bottom:calc(var(--nav-h) + var(--safe-bottom) + 14px);
+  left:50%; transform:translateX(-50%) translateY(16px);
+  background:rgba(255,255,255,0.11);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.14);
+  color:var(--text); padding:9px 18px;
+  border-radius:20px; font-size:14px; font-weight:500;
+  opacity:0; transition:opacity 0.22s, transform 0.22s;
+  z-index:300; pointer-events:none; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* STELLAR ANIMATIONS */
+@keyframes cloudRot  { from{transform:rotate(0deg)}  to{transform:rotate(360deg)} }
+@keyframes cloudPls  { 0%,100%{opacity:.55} 50%{opacity:.95} }
+@keyframes cloudPls2 { 0%,100%{opacity:.7}  50%{opacity:.3} }
+@keyframes starPls   { 0%,100%{transform:scale(1)}    50%{transform:scale(1.06)} }
+@keyframes rsgPls    { 0%,100%{transform:scale(1)}    50%{transform:scale(1.09)} }
+@keyframes rsgSlw    { 0%,100%{transform:scale(1)}    50%{transform:scale(1.06)} }
+@keyframes convect   { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:.75;transform:scale(1.35)} }
+@keyframes wrWind    { 0%,100%{opacity:.1;transform:scale(1)} 50%{opacity:.28;transform:scale(1.05)} }
+@keyframes ccFlick   { 0%,100%{opacity:1} 12%{opacity:.55} 28%{opacity:1} 42%{opacity:.35} 58%{opacity:.9} 74%{opacity:.25} 88%{opacity:.8} }
+@keyframes ccFast    { 0%,100%{opacity:1} 25%{opacity:.15} 50%{opacity:.85} 75%{opacity:.1} }
+@keyframes nsPls     { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.65;transform:scale(.82)} }
+@keyframes snRing    { from{r:8;opacity:1} to{r:215;opacity:0} }
+@keyframes snFlash   { 0%{r:6;opacity:0} 8%{r:8;opacity:1} 40%{r:148;opacity:.7} 100%{r:148;opacity:0} }
+@keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+
+.c-cloudRot  { transform-box:fill-box; transform-origin:center; animation:cloudRot 42s linear infinite; }
+.c-cloudRotR { transform-box:fill-box; transform-origin:center; animation:cloudRot 56s linear infinite reverse; }
+.c-cloudPls  { animation:cloudPls  4s ease-in-out infinite; }
+.c-cloudPls2 { animation:cloudPls2 5s ease-in-out infinite; }
+.c-starPls   { transform-box:fill-box; transform-origin:center; animation:starPls 3s ease-in-out infinite; }
+.c-rsgPls    { transform-box:fill-box; transform-origin:center; animation:rsgPls  5s ease-in-out infinite; }
+.c-rsgSlw    { transform-box:fill-box; transform-origin:center; animation:rsgSlw  7s ease-in-out infinite; }
+.c-conv1     { transform-box:fill-box; transform-origin:center; animation:convect 3s   ease-in-out infinite; }
+.c-conv2     { transform-box:fill-box; transform-origin:center; animation:convect 4s   ease-in-out 1s infinite; }
+.c-conv3     { transform-box:fill-box; transform-origin:center; animation:convect 3.5s ease-in-out .5s infinite; }
+.c-conv4     { transform-box:fill-box; transform-origin:center; animation:convect 4.5s ease-in-out 1.5s infinite; }
+.c-wrW1      { transform-box:fill-box; transform-origin:center; animation:wrWind  4s ease-in-out infinite; }
+.c-wrW2      { transform-box:fill-box; transform-origin:center; animation:wrWind  5.5s ease-in-out 1.2s infinite; }
+.c-ccF       { animation:ccFlick .85s steps(1) infinite; }
+.c-ccFast    { animation:ccFast  .42s steps(1) infinite; }
+.c-nsPls     { transform-box:fill-box; transform-origin:center; animation:nsPls 1.4s ease-in-out infinite; }
+.c-snFlash   { animation:snFlash 1.6s ease-out infinite; }
+.c-snR1      { animation:snRing 1.8s ease-out infinite; stroke-width:6; }
+.c-snR2      { animation:snRing 1.8s ease-out .28s infinite; stroke-width:4.5; }
+.c-snR3      { animation:snRing 1.8s ease-out .56s infinite; stroke-width:3; }
+.c-snR4      { animation:snRing 1.8s ease-out .84s infinite; stroke-width:2; }
+
+.stg { display:none; }
+.stg.on { display:block; animation:fadeIn .7s ease; }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="app-title">AquaNova</div>
+  <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙</button>
+</header>
+
+<!-- TODAY -->
+<div class="view active" id="vToday">
+  <div class="star-wrap">
+    <svg class="star-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+      <rect width="300" height="300" fill="#03030c"/>
+      <!-- Background stars -->
+      <g opacity="1">
+        <circle cx="15" cy="20" r="1.0" fill="white" opacity=".60"/>
+        <circle cx="260" cy="14" r=".8"  fill="white" opacity=".50"/>
+        <circle cx="284" cy="50" r="1.1" fill="white" opacity=".55"/>
+        <circle cx="8"   cy="85" r=".7"  fill="white" opacity=".45"/>
+        <circle cx="293" cy="90" r=".9"  fill="white" opacity=".50"/>
+        <circle cx="5"   cy="150" r="1.0" fill="white" opacity=".55"/>
+        <circle cx="295" cy="158" r=".8"  fill="white" opacity=".40"/>
+        <circle cx="8"   cy="228" r=".9"  fill="white" opacity=".50"/>
+        <circle cx="290" cy="240" r="1.1" fill="white" opacity=".55"/>
+        <circle cx="18"  cy="274" r=".7"  fill="white" opacity=".45"/>
+        <circle cx="278" cy="280" r=".9"  fill="white" opacity=".50"/>
+        <circle cx="60"  cy="6"   r=".8"  fill="white" opacity=".40"/>
+        <circle cx="140" cy="3"   r="1.0" fill="white" opacity=".50"/>
+        <circle cx="220" cy="8"   r=".7"  fill="white" opacity=".45"/>
+        <circle cx="48"  cy="294" r=".9"  fill="white" opacity=".50"/>
+        <circle cx="152" cy="297" r=".8"  fill="white" opacity=".40"/>
+        <circle cx="238" cy="290" r="1.1" fill="white" opacity=".55"/>
+        <circle cx="36"  cy="40"  r=".7"  fill="white" opacity=".30"/>
+        <circle cx="258" cy="44"  r=".8"  fill="white" opacity=".30"/>
+        <circle cx="38"  cy="252" r=".7"  fill="white" opacity=".30"/>
+        <circle cx="264" cy="248" r=".8"  fill="white" opacity=".30"/>
+        <circle cx="80"  cy="14"  r=".6"  fill="white" opacity=".30"/>
+        <circle cx="206" cy="16"  r=".7"  fill="white" opacity=".30"/>
+        <circle cx="28"  cy="170" r=".6"  fill="white" opacity=".28"/>
+        <circle cx="274" cy="166" r=".7"  fill="white" opacity=".28"/>
+      </g>
+      <defs>
+        <radialGradient id="gP" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#fff8b0"/>
+          <stop offset="35%"  stop-color="#ff9900"/>
+          <stop offset="75%"  stop-color="#c84400"/>
+          <stop offset="100%" stop-color="#660000" stop-opacity=".5"/>
+        </radialGradient>
+        <radialGradient id="gO" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="white"/>
+          <stop offset="28%"  stop-color="#d8eeff"/>
+          <stop offset="65%"  stop-color="#5aabff"/>
+          <stop offset="100%" stop-color="#1a5fcc" stop-opacity=".8"/>
+        </radialGradient>
+        <radialGradient id="gR" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#ffdd88"/>
+          <stop offset="22%"  stop-color="#ff6600"/>
+          <stop offset="62%"  stop-color="#cc1100"/>
+          <stop offset="100%" stop-color="#5a0000" stop-opacity=".7"/>
+        </radialGradient>
+        <radialGradient id="gW" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="white"/>
+          <stop offset="28%"  stop-color="#b8f0ff"/>
+          <stop offset="65%"  stop-color="#00aaff"/>
+          <stop offset="100%" stop-color="#003388" stop-opacity=".8"/>
+        </radialGradient>
+        <radialGradient id="gC" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="white"/>
+          <stop offset="18%"  stop-color="#ffffa0"/>
+          <stop offset="55%"  stop-color="#ff8800"/>
+          <stop offset="100%" stop-color="#330000" stop-opacity=".6"/>
+        </radialGradient>
+        <radialGradient id="gN" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="white"/>
+          <stop offset="48%"  stop-color="#80e8ff"/>
+          <stop offset="100%" stop-color="#0044aa" stop-opacity=".7"/>
+        </radialGradient>
+      </defs>
+
+      <!-- STAGE 0: Molecular Cloud -->
+      <g class="stg" id="s0">
+        <ellipse cx="150" cy="150" rx="88" ry="72" fill="rgba(55,12,115,.17)" class="c-cloudRot"/>
+        <ellipse cx="150" cy="150" rx="72" ry="88" fill="rgba(38,9,98,.17)"  class="c-cloudRotR"/>
+        <ellipse cx="135" cy="142" rx="52" ry="42" fill="rgba(85,22,155,.22)" class="c-cloudPls"/>
+        <ellipse cx="166" cy="160" rx="44" ry="54" fill="rgba(52,14,124,.20)" class="c-cloudPls2"/>
+        <ellipse cx="150" cy="148" rx="34" ry="30" fill="rgba(105,38,185,.26)" class="c-cloudPls"/>
+        <circle  cx="150" cy="150" r="18"           fill="rgba(125,75,215,.20)" class="c-starPls"/>
+      </g>
+
+      <!-- STAGE 1: Protostar -->
+      <g class="stg" id="s1">
+        <ellipse cx="150" cy="150" rx="68" ry="55" fill="rgba(78,22,128,.20)" class="c-cloudPls"/>
+        <ellipse cx="150" cy="150" rx="55" ry="68" fill="rgba(58,18,108,.18)" class="c-cloudPls2"/>
+        <ellipse cx="150" cy="150" rx="50" ry="14" fill="rgba(255,115,28,.18)" transform="rotate(28,150,150)"/>
+        <circle  cx="150" cy="150" r="50"           fill="rgba(255,75,0,.08)"  class="c-starPls"/>
+        <circle  cx="150" cy="150" r="36"           fill="url(#gP)"           class="c-starPls"/>
+        <circle  cx="150" cy="150" r="15"           fill="rgba(255,255,200,.9)"/>
+      </g>
+
+      <!-- STAGE 2: O-type Main Sequence -->
+      <g class="stg" id="s2">
+        <circle cx="150" cy="150" r="95" fill="rgba(58,128,255,.04)" class="c-starPls"/>
+        <circle cx="150" cy="150" r="80" fill="rgba(68,138,255,.06)" class="c-starPls"/>
+        <circle cx="150" cy="150" r="65" fill="rgba(80,148,255,.09)" class="c-starPls"/>
+        <circle cx="150" cy="150" r="50" fill="url(#gO)"            class="c-starPls"/>
+        <circle cx="150" cy="150" r="20" fill="white" opacity=".95"/>
+      </g>
+
+      <!-- STAGE 3: Red Supergiant -->
+      <g class="stg" id="s3">
+        <circle cx="150" cy="150" r="108" fill="rgba(175,38,0,.05)"  class="c-rsgSlw"/>
+        <circle cx="150" cy="150" r="90"  fill="rgba(198,48,0,.08)"  class="c-rsgPls"/>
+        <circle cx="150" cy="150" r="74"  fill="url(#gR)"            class="c-rsgPls"/>
+        <circle cx="118" cy="126" r="12"  fill="rgba(255,158,58,.36)" class="c-conv1"/>
+        <circle cx="174" cy="140" r="10"  fill="rgba(255,138,38,.30)" class="c-conv2"/>
+        <circle cx="140" cy="178" r="11"  fill="rgba(255,128,28,.33)" class="c-conv3"/>
+        <circle cx="160" cy="120" r="8"   fill="rgba(255,172,68,.28)" class="c-conv4"/>
+        <circle cx="126" cy="170" r="9"   fill="rgba(255,118,28,.30)" class="c-conv2"/>
+        <circle cx="150" cy="150" r="22"  fill="rgba(255,222,140,.55)"/>
+      </g>
+
+      <!-- STAGE 4: Wolf-Rayet -->
+      <g class="stg" id="s4">
+        <circle cx="150" cy="150" r="95" fill="rgba(0,175,215,.04)"               class="c-wrW1"/>
+        <circle cx="150" cy="150" r="80" fill="rgba(0,195,238,.06)"               class="c-wrW2"/>
+        <circle cx="150" cy="150" r="68" fill="none" stroke="rgba(0,208,255,.18)" stroke-width="3" class="c-wrW1"/>
+        <circle cx="150" cy="150" r="58" fill="none" stroke="rgba(78,218,255,.14)" stroke-width="2.5" class="c-wrW2"/>
+        <circle cx="150" cy="150" r="40" fill="url(#gW)"                          class="c-starPls"/>
+        <circle cx="150" cy="150" r="16" fill="white" opacity=".96"/>
+      </g>
+
+      <!-- STAGE 5: Core Collapse -->
+      <g class="stg" id="s5">
+        <circle cx="150" cy="150" r="60" fill="url(#gC)" class="c-ccF"/>
+        <circle cx="150" cy="150" r="38" fill="rgba(255,255,215,.90)" class="c-ccFast"/>
+        <circle cx="150" cy="150" r="18" fill="white" class="c-ccFast"/>
+      </g>
+
+      <!-- STAGE 6: Supernova -->
+      <g class="stg" id="s6">
+        <!-- White flash - SMIL animated radius (CSS r property unreliable in Safari) -->
+        <circle cx="150" cy="150" r="8" fill="white">
+          <animate attributeName="r"       from="8"   to="148" dur="1.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" from="1"   to="0"   dur="1.6s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Shockwave ring 1 - white -->
+        <circle cx="150" cy="150" r="8" fill="none" stroke="white" stroke-width="6">
+          <animate attributeName="r"            from="8"   to="215" dur="1.8s"            repeatCount="indefinite"/>
+          <animate attributeName="opacity"      from="1"   to="0"   dur="1.8s"            repeatCount="indefinite"/>
+          <animate attributeName="stroke-width" from="6"   to="0.5" dur="1.8s"            repeatCount="indefinite"/>
+        </circle>
+        <!-- Shockwave ring 2 - yellow -->
+        <circle cx="150" cy="150" r="8" fill="none" stroke="rgba(255,255,140,.95)" stroke-width="4.5">
+          <animate attributeName="r"       from="8" to="215" dur="1.8s" begin="0.28s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" from="1" to="0"   dur="1.8s" begin="0.28s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Shockwave ring 3 - orange -->
+        <circle cx="150" cy="150" r="8" fill="none" stroke="rgba(255,168,60,.9)" stroke-width="3">
+          <animate attributeName="r"       from="8" to="215" dur="1.8s" begin="0.56s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" from="1" to="0"   dur="1.8s" begin="0.56s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Shockwave ring 4 - red-orange -->
+        <circle cx="150" cy="150" r="8" fill="none" stroke="rgba(210,95,40,.75)" stroke-width="2">
+          <animate attributeName="r"       from="8" to="215" dur="1.8s" begin="0.84s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" from="1" to="0"   dur="1.8s" begin="0.84s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Neutron star remnant -->
+        <circle cx="150" cy="150" r="12" fill="url(#gN)" class="c-nsPls"/>
+        <circle cx="150" cy="150" r="22" fill="none" stroke="rgba(100,200,255,.5)" stroke-width="1.5" class="c-nsPls"/>
+        <!-- Debris (SMIL) -->
+        <circle cx="150" cy="150" r="2.5" fill="white" opacity=".9">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="0,-95" dur="1.9s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" from=".9" to="0" dur="1.9s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="150" cy="150" r="2.0" fill="rgba(255,230,100,.95)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="68,-68" dur="1.8s" repeatCount="indefinite" begin=".2s"/>
+          <animate attributeName="opacity" from=".95" to="0" dur="1.8s" repeatCount="indefinite" begin=".2s"/>
+        </circle>
+        <circle cx="150" cy="150" r="2.3" fill="rgba(255,210,160,.85)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="95,0" dur="2.0s" repeatCount="indefinite" begin=".4s"/>
+          <animate attributeName="opacity" from=".85" to="0" dur="2.0s" repeatCount="indefinite" begin=".4s"/>
+        </circle>
+        <circle cx="150" cy="150" r="1.9" fill="white" opacity=".8">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="66,66" dur="1.85s" repeatCount="indefinite" begin=".1s"/>
+          <animate attributeName="opacity" from=".8" to="0" dur="1.85s" repeatCount="indefinite" begin=".1s"/>
+        </circle>
+        <circle cx="150" cy="150" r="2.2" fill="rgba(200,210,255,.85)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="0,95" dur="2.0s" repeatCount="indefinite" begin=".3s"/>
+          <animate attributeName="opacity" from=".85" to="0" dur="2.0s" repeatCount="indefinite" begin=".3s"/>
+        </circle>
+        <circle cx="150" cy="150" r="2.0" fill="rgba(255,255,160,.85)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="-66,66" dur="1.8s" repeatCount="indefinite" begin=".5s"/>
+          <animate attributeName="opacity" from=".85" to="0" dur="1.8s" repeatCount="indefinite" begin=".5s"/>
+        </circle>
+        <circle cx="150" cy="150" r="2.3" fill="white" opacity=".85">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="-95,0" dur="1.95s" repeatCount="indefinite" begin=".7s"/>
+          <animate attributeName="opacity" from=".85" to="0" dur="1.95s" repeatCount="indefinite" begin=".7s"/>
+        </circle>
+        <circle cx="150" cy="150" r="2.0" fill="rgba(255,210,110,.85)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="-68,-68" dur="1.85s" repeatCount="indefinite" begin=".6s"/>
+          <animate attributeName="opacity" from=".85" to="0" dur="1.85s" repeatCount="indefinite" begin=".6s"/>
+        </circle>
+        <circle cx="150" cy="150" r="1.7" fill="rgba(255,240,200,.8)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="85,-35" dur="1.9s" repeatCount="indefinite" begin=".15s"/>
+          <animate attributeName="opacity" from=".8" to="0" dur="1.9s" repeatCount="indefinite" begin=".15s"/>
+        </circle>
+        <circle cx="150" cy="150" r="1.7" fill="rgba(200,230,255,.8)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="-35,85" dur="1.9s" repeatCount="indefinite" begin=".45s"/>
+          <animate attributeName="opacity" from=".8" to="0" dur="1.9s" repeatCount="indefinite" begin=".45s"/>
+        </circle>
+        <circle cx="150" cy="150" r="1.6" fill="white" opacity=".75">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="-85,35" dur="2.0s" repeatCount="indefinite" begin=".65s"/>
+          <animate attributeName="opacity" from=".75" to="0" dur="2.0s" repeatCount="indefinite" begin=".65s"/>
+        </circle>
+        <circle cx="150" cy="150" r="1.6" fill="rgba(255,220,120,.8)">
+          <animateTransform attributeName="transform" type="translate" from="0,0" to="35,-85" dur="1.85s" repeatCount="indefinite" begin=".35s"/>
+          <animate attributeName="opacity" from=".8" to="0" dur="1.85s" repeatCount="indefinite" begin=".35s"/>
+        </circle>
+      </g>
+    </svg>
+
+    <div class="stage-info">
+      <div class="stage-name" id="stageName">Molecular Cloud</div>
+    </div>
+    <div class="progress-wrap">
+      <span class="prog-num" id="progNum">0</span><span class="prog-unit" id="progUnit"> ml</span>
+      <div class="prog-goal" id="progGoal">of 2000 ml</div>
+    </div>
+  </div>
+
+  <div class="today-log">
+    <div class="log-hdr">Today's Log</div>
+    <div id="logList"></div>
+  </div>
+</div>
+
+<!-- ADD -->
+<div class="view" id="vAdd">
+  <div class="add-controls">
+    <div class="search-bar">
+      <input type="search" class="search-input" id="searchIn" placeholder="Search beverages..." autocomplete="off" autocorrect="off" autocapitalize="off">
+    </div>
+    <div class="cats" id="catRow">
+      <button class="cat-pill active" data-cat="all">All</button>
+      <button class="cat-pill" data-cat="water">💧 Water</button>
+      <button class="cat-pill" data-cat="tea">🍵 Tea</button>
+      <button class="cat-pill" data-cat="coffee">☕ Coffee</button>
+      <button class="cat-pill" data-cat="juice">🧃 Juice &amp; Soda</button>
+      <button class="cat-pill" data-cat="milk">🥛 Milk</button>
+      <button class="cat-pill" data-cat="sports">⚡ Sports &amp; Energy</button>
+      <button class="cat-pill" data-cat="alcohol">🍺 Alcohol</button>
+    </div>
+  </div>
+  <div class="bev-list" id="bevList"></div>
+</div>
+
+<!-- HISTORY -->
+<div class="view" id="vHistory">
+  <div class="month-nav">
+    <button class="month-btn" id="prevMo">&#8249;</button>
+    <span class="month-lbl" id="monthLbl"></span>
+    <button class="month-btn" id="nextMo">&#8250;</button>
+  </div>
+  <div class="day-hdrs">
+    <div class="day-hdr">S</div><div class="day-hdr">M</div>
+    <div class="day-hdr">T</div><div class="day-hdr">W</div>
+    <div class="day-hdr">T</div><div class="day-hdr">F</div>
+    <div class="day-hdr">S</div>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div class="cal-legend">
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(85,18,155,.55)"></div>1–19%</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(255,100,0,.45)"></div>20–39%</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(74,158,255,.45)"></div>40–59%</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(198,48,0,.45)"></div>60–79%</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(0,195,255,.4)"></div>80–99%</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(255,218,48,.5)"></div>✦ Goal!</div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-item active" data-tab="today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+    <span>Today</span>
+  </button>
+  <button class="nav-item" data-tab="add">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    <span>Add</span>
+  </button>
+  <button class="nav-item" data-tab="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    <span>History</span>
+  </button>
+</nav>
+
+<!-- ADD PANEL -->
+<div class="add-panel" id="addPanel">
+  <div class="panel-handle"></div>
+  <div class="panel-bev" id="panelBev"></div>
+  <div class="panel-factor" id="panelFact"></div>
+  <div class="amount-row">
+    <input type="number" class="amount-input" id="amtIn" placeholder="250" min="1" max="3000" inputmode="decimal">
+    <div class="unit-tog">
+      <button class="unit-btn" id="uMl" data-unit="ml">ml</button>
+      <button class="unit-btn" id="uOz" data-unit="oz">oz</button>
+    </div>
+  </div>
+  <div class="net-preview" id="netPrev"></div>
+  <button class="add-btn" id="addBtn">Add to Log</button>
+</div>
+<div class="backdrop" id="backdrop"></div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal hidden" id="settModal">
+  <div class="modal-sheet">
+    <div class="modal-title">Settings <button class="icon-btn" id="closeSett">✕</button></div>
+    <div class="setting-row">
+      <span class="setting-lbl">Daily goal</span>
+      <div class="setting-val">
+        <input type="number" class="goal-input" id="goalIn" min="100" max="8000" step="50">
+        <span id="goalUnitLbl">ml</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">Units</span>
+      <div class="setting-val">
+        <div class="unit-tog">
+          <button class="unit-btn" id="sUml">ml</button>
+          <button class="unit-btn" id="sUoz">oz</button>
+        </div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">Data</span>
+      <div class="setting-val">
+        <button id="resetBtn" class="reset-btn">Clear all data</button>
+      </div>
+    </div>
+    <div class="settings-about">
+      AquaNova &middot; hydration tracker
+    </div>
+  </div>
+</div>
+
+<!-- DAY DETAIL MODAL -->
+<div class="modal hidden" id="dayModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="dayModalDate"></span>
+      <button class="icon-btn" id="closeDayModal">✕</button>
+    </div>
+    <div class="day-modal-date" id="dayModalSub"></div>
+    <div class="day-modal-total" id="dayModalTotal"></div>
+    <div class="day-modal-list" id="dayModalList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── BEVERAGE DATA ──────────────────────────────────────────────────────────────
+/*
+ * HYDRATION FACTORS — Research Basis
+ *
+ * Factor = net fluid retained per ml consumed, relative to water (1.00).
+ * Negative values (neat spirits) indicate net fluid loss via ADH suppression.
+ *
+ * [1] Maughan RJ et al. (2016). "A randomized trial to assess the potential of
+ *     different beverages to affect hydration status: development of a beverage
+ *     hydration index." Am J Clin Nutr, 103(3):717-723.
+ *     doi:10.3945/ajcn.115.114769
+ *     Primary source: water, milk, OJ, cola, lager, sports drink, tea measured
+ *     directly via urine output over 4h vs still water baseline.
+ *
+ * [2] Killer SC, Blannin AK, Jeukendrup AE. (2014). "No Evidence of Dehydration
+ *     with Moderate Daily Coffee Intake." PLOS ONE, 9(1):e84154.
+ *     doi:10.1371/journal.pone.0084154
+ *     Coffee at habitual doses (~200mg caffeine/day) does not cause net fluid
+ *     loss. Factor 0.80 reflects mild diuresis at higher/single-dose intake.
+ *
+ * [3] Shirreffs SM, Maughan RJ. (1997). "Restoration of fluid balance after
+ *     exercise-induced dehydration: effects of alcohol consumption."
+ *     J Appl Physiol, 83(4):1152-8. doi:10.1152/jappl.1997.83.4.1152
+ *     Dose-dependent alcohol diuresis; basis for wine and spirits factors.
+ *
+ * [4] Hobson RM, Maughan RJ. (2010). "Hydration status and the diuretic action
+ *     of a small dose of alcohol." Alcohol Alcohol, 45(4):366-73.
+ *     doi:10.1093/alcalc/agq029
+ *     Low-ABV beer (~3.5%) retains ~57% of consumed volume; basis for beer factors.
+ *
+ * [5] Energy drink factors derived from caffeine concentration per 100ml,
+ *     scaled against the coffee benchmark from [2]. Higher caffeine per ml
+ *     = lower factor. Red Bull: 32mg/100ml → ~0.60; Bang: ~63mg/100ml → ~0.40.
+ *
+ * Note: Milk's true Beverage Hydration Index per [1] exceeds 1.0 due to
+ * protein/electrolytes slowing gastric emptying. Factors here are conservative
+ * approximations; the true hydration benefit of milk is likely higher.
+ */
+const BEVS = [
+  // WATER — factor 1.00; direct retention, no diuretic effect [1]
+  {id:'water',       name:'Water',                       cat:'water',   f:1.00, e:'💧'},
+  {id:'sparkling',   name:'Sparkling Water',             cat:'water',   f:1.00, e:'💧'},
+  {id:'mineral',     name:'Mineral Water',               cat:'water',   f:1.00, e:'💧'},
+  {id:'coconut-w',   name:'Coconut Water',               cat:'water',   f:0.95, e:'🥥'},
+  {id:'soda-water',  name:'Soda Water',                  cat:'water',   f:0.99, e:'💧'},
+  // TEA — caffeine mild diuresis; declines with brew strength [1][2]
+  // Decaf/herbal teas approach water factor; matcha/strong black closest to coffee
+  {id:'herbal',      name:'Herbal Tea (caffeine-free)',  cat:'tea',     f:0.99, e:'🌿'},
+  {id:'rooibos',     name:'Rooibos Tea',                 cat:'tea',     f:0.99, e:'🌿'},
+  {id:'white-tea',   name:'White Tea',                   cat:'tea',     f:0.98, e:'🍵'},
+  {id:'gt-light',    name:'Green Tea (light)',           cat:'tea',     f:0.95, e:'🍵'},
+  {id:'gt-reg',      name:'Green Tea (regular)',         cat:'tea',     f:0.93, e:'🍵'},
+  {id:'matcha',      name:'Matcha',                      cat:'tea',     f:0.90, e:'🍵'},
+  {id:'oolong',      name:'Oolong Tea',                  cat:'tea',     f:0.91, e:'🍵'},
+  {id:'bt-light',    name:'Black Tea (light)',           cat:'tea',     f:0.92, e:'🍵'},
+  {id:'bt-reg',      name:'Black Tea (regular)',         cat:'tea',     f:0.88, e:'🍵'},
+  {id:'bt-strong',   name:'Black Tea (strong)',          cat:'tea',     f:0.85, e:'🍵'},
+  {id:'chai',        name:'Chai (spiced black tea)',     cat:'tea',     f:0.86, e:'🍵'},
+  {id:'chai-latte',  name:'Chai Latte',                  cat:'tea',     f:0.82, e:'🍵'},
+  {id:'kombucha',    name:'Kombucha',                    cat:'tea',     f:0.92, e:'🫗'},
+  // COFFEE — Killer et al. [2]: no net dehydration at moderate daily intake.
+  // Factor 0.80 reflects single-dose caffeine diuresis; decaf approaches water [2]
+  {id:'filter',      name:'Filter / Drip Coffee',        cat:'coffee',  f:0.80, e:'☕'},
+  {id:'americano',   name:'Americano',                   cat:'coffee',  f:0.80, e:'☕'},
+  {id:'espresso',    name:'Espresso',                    cat:'coffee',  f:0.72, e:'☕'},
+  {id:'latte',       name:'Latte',                       cat:'coffee',  f:0.84, e:'☕'},
+  {id:'cappuccino',  name:'Cappuccino',                  cat:'coffee',  f:0.83, e:'☕'},
+  {id:'flat-white',  name:'Flat White',                  cat:'coffee',  f:0.82, e:'☕'},
+  {id:'macchiato',   name:'Macchiato',                   cat:'coffee',  f:0.78, e:'☕'},
+  {id:'mocha',       name:'Mocha',                       cat:'coffee',  f:0.80, e:'☕'},
+  {id:'cold-brew',   name:'Cold Brew (ready-to-drink)',  cat:'coffee',  f:0.78, e:'🧊'},
+  {id:'cold-brewC',  name:'Cold Brew (concentrate)',     cat:'coffee',  f:0.65, e:'🧊'},
+  {id:'instant',     name:'Instant Coffee',              cat:'coffee',  f:0.78, e:'☕'},
+  {id:'decaf',       name:'Decaf Coffee',                cat:'coffee',  f:0.96, e:'☕'},
+  // JUICE & SODA — OJ/apple juice directly measured in [1]; cola factor reflects
+  // caffeine + carbonation; diet cola slightly better than regular [1]
+  {id:'oj',          name:'Orange Juice',                cat:'juice',   f:0.87, e:'🍊'},
+  {id:'apple-j',     name:'Apple Juice',                 cat:'juice',   f:0.87, e:'🍎'},
+  {id:'cranberry-j', name:'Cranberry Juice',             cat:'juice',   f:0.85, e:'🍒'},
+  {id:'grape-j',     name:'Grape Juice',                 cat:'juice',   f:0.84, e:'🍇'},
+  {id:'pineapple-j', name:'Pineapple Juice',             cat:'juice',   f:0.86, e:'🍍'},
+  {id:'smoothie',    name:'Fruit Smoothie',              cat:'juice',   f:0.85, e:'🥤'},
+  {id:'lemonade',    name:'Lemonade',                    cat:'juice',   f:0.83, e:'🍋'},
+  {id:'cola',        name:'Cola (Coke / Pepsi)',         cat:'juice',   f:0.74, e:'🥤'},
+  {id:'diet-cola',   name:'Diet Cola',                   cat:'juice',   f:0.76, e:'🥤'},
+  {id:'lemon-soda',  name:'Lemon Soda (Sprite / 7UP)',   cat:'juice',   f:0.82, e:'🥤'},
+  {id:'ginger-ale',  name:'Ginger Ale',                  cat:'juice',   f:0.83, e:'🥤'},
+  {id:'tonic',       name:'Tonic Water',                 cat:'juice',   f:0.86, e:'🥤'},
+  // MILK — whole/skim directly measured in [1]; true BHI > 1.0 but conservative
+  // estimate used here. Plant milks extrapolated from nutrient composition.
+  {id:'whole-milk',  name:'Whole Milk',                  cat:'milk',    f:0.88, e:'🥛'},
+  {id:'semi-milk',   name:'Semi-skimmed Milk',           cat:'milk',    f:0.90, e:'🥛'},
+  {id:'skim-milk',   name:'Skimmed Milk',                cat:'milk',    f:0.91, e:'🥛'},
+  {id:'oat-milk',    name:'Oat Milk',                    cat:'milk',    f:0.90, e:'🌾'},
+  {id:'almond-milk', name:'Almond Milk',                 cat:'milk',    f:0.92, e:'🌰'},
+  {id:'soy-milk',    name:'Soy Milk',                    cat:'milk',    f:0.90, e:'🫘'},
+  {id:'coconut-m',   name:'Coconut Milk (drink)',        cat:'milk',    f:0.88, e:'🥥'},
+  {id:'rice-milk',   name:'Rice Milk',                   cat:'milk',    f:0.90, e:'🌾'},
+  // SPORTS & ENERGY — sports drinks measured in [1] (~0.97); energy drink factors
+  // extrapolated from caffeine/100ml concentration scaled against coffee [2][5]
+  {id:'sports',      name:'Sports Drink (Gatorade/Powerade)', cat:'sports', f:0.97, e:'⚡'},
+  {id:'electrolyte', name:'Electrolyte Water',           cat:'sports',  f:0.99, e:'⚡'},
+  {id:'prime',       name:'Prime Hydration',             cat:'sports',  f:0.95, e:'⚡'},
+  {id:'redbull',     name:'Red Bull (regular)',          cat:'sports',  f:0.60, e:'🐂'},
+  {id:'redbull-sf',  name:'Red Bull Sugar Free',         cat:'sports',  f:0.62, e:'🐂'},
+  {id:'monster',     name:'Monster Energy',              cat:'sports',  f:0.55, e:'🟩'},
+  {id:'monster-u',   name:'Monster Ultra (sugar-free)',  cat:'sports',  f:0.57, e:'🟩'},
+  {id:'rockstar',    name:'Rockstar Energy',             cat:'sports',  f:0.55, e:'⭐'},
+  {id:'bang',        name:'Bang Energy (300mg caffeine)', cat:'sports', f:0.40, e:'💥'},
+  {id:'celsius',     name:'Celsius Energy',              cat:'sports',  f:0.50, e:'🌡'},
+  {id:'preworkout',  name:'Pre-Workout Drink',           cat:'sports',  f:0.45, e:'💪'},
+  // ALCOHOL — lager directly measured in [1] and [4]; wine/spirits factors from
+  // [3]. Negative factors for neat spirits: ADH suppression causes net fluid loss.
+  {id:'lt-beer',     name:'Light Beer (~3.5% ABV)',      cat:'alcohol', f:0.57, e:'🍺'},
+  {id:'lager',       name:'Lager / Pilsner (~5% ABV)',   cat:'alcohol', f:0.47, e:'🍺'},
+  {id:'ipa',         name:'IPA (~6.5% ABV)',             cat:'alcohol', f:0.37, e:'🍺'},
+  {id:'strong-ale',  name:'Strong Ale (~7.5% ABV)',      cat:'alcohol', f:0.27, e:'🍺'},
+  {id:'stout',       name:'Stout (~5% ABV)',             cat:'alcohol', f:0.43, e:'🍺'},
+  {id:'seltzer',     name:'Hard Seltzer (~5% ABV)',      cat:'alcohol', f:0.65, e:'🫧'},
+  {id:'cider',       name:'Hard Cider (~5% ABV)',        cat:'alcohol', f:0.42, e:'🍏'},
+  {id:'white-wine',  name:'White Wine (~12% ABV)',       cat:'alcohol', f:0.25, e:'🍷'},
+  {id:'red-wine',    name:'Red Wine (~13% ABV)',         cat:'alcohol', f:0.20, e:'🍷'},
+  {id:'rose-wine',   name:'Rosé Wine (~12% ABV)',        cat:'alcohol', f:0.23, e:'🍷'},
+  {id:'champagne',   name:'Champagne / Prosecco (~12%)', cat:'alcohol', f:0.20, e:'🥂'},
+  {id:'dessert-w',   name:'Dessert Wine (~18% ABV)',     cat:'alcohol', f:0.05, e:'🍷'},
+  {id:'gin-tonic',   name:'Gin & Tonic',                 cat:'alcohol', f:0.15, e:'🍹'},
+  {id:'vodka-soda',  name:'Vodka Soda',                  cat:'alcohol', f:0.25, e:'🍹'},
+  {id:'rum-cola',    name:'Rum & Cola',                  cat:'alcohol', f:0.10, e:'🍹'},
+  {id:'mojito',      name:'Mojito',                      cat:'alcohol', f:0.15, e:'🍹'},
+  {id:'margarita',   name:'Margarita',                   cat:'alcohol', f:0.08, e:'🍹'},
+  {id:'spirits',     name:'Spirits Neat (40% ABV)',      cat:'alcohol', f:-0.35,e:'🥃'},
+  {id:'whiskey',     name:'Whiskey Neat',                cat:'alcohol', f:-0.35,e:'🥃'},
+  {id:'tequila',     name:'Tequila Shot',                cat:'alcohol', f:-0.40,e:'🥃'},
+];
+
+const STAGE_NAMES = [
+  'Molecular Cloud',
+  'Protostar',
+  'O-type Main Sequence',
+  'Red Supergiant',
+  'Wolf-Rayet Star',
+  'Core Collapse...',
+  '\u2736 SUPERNOVA! \u2736',
+];
+
+const OZ = 29.5735;
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+const S = {
+  logs:     {},
+  goal:     2000,
+  unit:     'ml',
+  selBev:   null,
+  tab:      'today',
+  calDate:  new Date(),
+  cat:      'all',
+  q:        '',
+};
+
+// ── PERSISTENCE ───────────────────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem('aqnv1', JSON.stringify({logs:S.logs, goal:S.goal, unit:S.unit})); }
+  catch(e) {}
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('aqnv1') || '{}');
+    if (d.logs) S.logs = d.logs;
+    if (d.goal) S.goal = d.goal;
+    if (d.unit) S.unit = d.unit;
+  } catch(e) {}
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────────
+function toDay() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function netTotal(dateStr) {
+  return (S.logs[dateStr] || []).reduce((s,e) => s + e.netMl, 0);
+}
+
+function stage(pct) {
+  if (pct <= 0)   return 0;
+  if (pct < 20)   return 1;
+  if (pct < 40)   return 2;
+  if (pct < 60)   return 3;
+  if (pct < 80)   return 4;
+  if (pct < 100)  return 5;
+  return 6;
+}
+
+function fClass(f) {
+  if (f >= 0.90) return 'f-great';
+  if (f >= 0.75) return 'f-good';
+  if (f >= 0.50) return 'f-ok';
+  if (f >= 0.10) return 'f-poor';
+  if (f >= 0)    return 'f-bad';
+  return 'f-neg';
+}
+
+function fmt(ml, unit) {
+  if (unit === 'oz') return (ml / OZ).toFixed(1) + '\u202foz';
+  return Math.round(ml) + '\u202fml';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── RENDER: TODAY ──────────────────────────────────────────────────────────────
+function renderToday() {
+  const d = toDay();
+  const entries = S.logs[d] || [];
+  const total = Math.max(0, netTotal(d));
+  const pct = Math.min(100, (total / S.goal) * 100);
+  const stg = stage(pct);
+
+  document.querySelectorAll('.stg').forEach(g => g.classList.remove('on'));
+  const el = document.getElementById('s' + stg);
+  if (el) el.classList.add('on');
+  document.getElementById('stageName').textContent = STAGE_NAMES[stg];
+
+  if (S.unit === 'oz') {
+    document.getElementById('progNum').textContent  = (total / OZ).toFixed(1);
+    document.getElementById('progUnit').textContent = '\u202foz';
+    document.getElementById('progGoal').textContent = 'of ' + (S.goal / OZ).toFixed(1) + '\u202foz';
+  } else {
+    document.getElementById('progNum').textContent  = Math.round(total);
+    document.getElementById('progUnit').textContent = '\u202fml';
+    document.getElementById('progGoal').textContent = 'of ' + S.goal + '\u202fml';
+  }
+
+  const ll = document.getElementById('logList');
+  if (!entries.length) {
+    ll.innerHTML = '<div class="log-empty">Nothing logged yet.<br>Tap Add to get started.</div>';
+    return;
+  }
+
+  ll.innerHTML = [...entries].reverse().map((e, ri) => {
+    const idx = entries.length - 1 - ri;
+    const sign = e.netMl >= 0 ? '+' : '';
+    return `<div class="log-item">
+      <span class="log-emoji">${e.emoji}</span>
+      <div class="log-info">
+        <div class="log-name">${e.name}</div>
+        <div class="log-time">${e.time}</div>
+      </div>
+      <div class="log-right">
+        <div class="log-amount">${fmt(e.amtMl, S.unit)}</div>
+        <div class="log-net">${sign}${fmt(e.netMl, S.unit)} net</div>
+      </div>
+    </div>`;
+  }).join('');
+
+}
+
+// ── RENDER: BEVERAGES ──────────────────────────────────────────────────────────
+function renderBevs() {
+  const q = S.q.toLowerCase();
+  const filtered = BEVS.filter(b =>
+    (S.cat === 'all' || b.cat === S.cat) &&
+    (!q || b.name.toLowerCase().includes(q))
+  );
+
+  const list = document.getElementById('bevList');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="log-empty">No matches.</div>'; return;
+  }
+
+  list.innerHTML = filtered.map(b => `
+    <div class="bev-item${S.selBev && S.selBev.id === b.id ? ' selected' : ''}" data-id="${b.id}">
+      <span class="bev-emoji">${b.e}</span>
+      <span class="bev-name">${b.name}</span>
+      <span class="f-badge ${fClass(b.f)}">${b.f.toFixed(2)}</span>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.bev-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const bev = BEVS.find(b => b.id === el.dataset.id);
+      if (bev) openPanel(bev);
+    });
+  });
+}
+
+// ── ADD PANEL ──────────────────────────────────────────────────────────────────
+function openPanel(bev) {
+  S.selBev = bev;
+  renderBevs();
+  document.getElementById('panelBev').textContent = bev.name;
+  document.getElementById('panelFact').textContent = bev.f >= 0
+    ? `Hydration factor: ${bev.f.toFixed(2)}`
+    : `\u26a0 Net dehydrating (factor: ${bev.f.toFixed(2)})`;
+  syncUnitBtns();
+  updatePreview();
+  document.getElementById('addPanel').classList.add('open');
+  document.getElementById('backdrop').classList.add('show');
+  setTimeout(() => document.getElementById('amtIn').focus(), 300);
+}
+
+function closePanel() {
+  document.getElementById('addPanel').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('show');
+  S.selBev = null;
+  document.getElementById('amtIn').value = '';
+  document.getElementById('netPrev').innerHTML = '';
+  renderBevs();
+}
+
+function updatePreview() {
+  const bev = S.selBev;
+  const val = parseFloat(document.getElementById('amtIn').value);
+  const prev = document.getElementById('netPrev');
+  if (!bev || !val || val <= 0) { prev.innerHTML = ''; return; }
+  const amtMl = S.unit === 'oz' ? val * OZ : val;
+  const net = amtMl * bev.f;
+  const str = fmt(Math.abs(net), S.unit);
+  prev.innerHTML = net >= 0
+    ? `Net water: <span class="net-pos">+${str}</span>`
+    : `Net water: <span class="net-neg">\u2212${str}</span>`;
+}
+
+function logDrink() {
+  const bev = S.selBev;
+  if (!bev) return;
+  const val = parseFloat(document.getElementById('amtIn').value);
+  if (!val || val <= 0) { toast('Enter an amount'); return; }
+  const amtMl = S.unit === 'oz' ? val * OZ : val;
+  const netMl = amtMl * bev.f;
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const d = toDay();
+  if (!S.logs[d]) S.logs[d] = [];
+  S.logs[d].push({name:bev.name, emoji:bev.e, amtMl, netMl, time});
+  save();
+  closePanel();
+  toast(`${bev.e} Logged!`);
+  switchTab('today');
+}
+
+// ── UNITS ─────────────────────────────────────────────────────────────────────
+function syncUnitBtns() {
+  const ml = S.unit === 'ml';
+  ['uMl','sUml'].forEach(id => document.getElementById(id).classList.toggle('active', ml));
+  ['uOz','sUoz'].forEach(id => document.getElementById(id).classList.toggle('active', !ml));
+  document.getElementById('goalUnitLbl').textContent = S.unit;
+  const gi = document.getElementById('goalIn');
+  gi.value = S.unit === 'oz' ? (S.goal / OZ).toFixed(0) : S.goal;
+}
+
+function setUnit(u) {
+  const prev = S.unit;
+  S.unit = u;
+  const inp = document.getElementById('amtIn');
+  if (inp.value) {
+    const v = parseFloat(inp.value);
+    inp.value = (prev === 'ml' && u === 'oz') ? (v / OZ).toFixed(1)
+              : (prev === 'oz' && u === 'ml') ? Math.round(v * OZ)
+              : inp.value;
+  }
+  save(); syncUnitBtns(); updatePreview(); renderToday();
+}
+
+// ── RENDER: CALENDAR ──────────────────────────────────────────────────────────
+function renderCal() {
+  const d = S.calDate;
+  const y = d.getFullYear(), m = d.getMonth();
+  document.getElementById('monthLbl').textContent =
+    d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const days = new Date(y, m+1, 0).getDate();
+  const todayKey = toDay();
+  const now = new Date();
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+  for (let day = 1; day <= days; day++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isToday = ds === todayKey;
+    const isFuture = new Date(y, m, day) > now;
+    const tot = Math.max(0, netTotal(ds));
+    const pct = S.goal ? (tot / S.goal) * 100 : 0;
+
+    let bg = 'transparent', tc = 'var(--text2)', dot = '';
+    if (!isFuture && tot > 0) {
+      if      (pct >= 100) { bg='rgba(255,218,48,.22)'; tc='#ffda30'; dot='<div class="cal-dot" style="background:#ffda30"></div>'; }
+      else if (pct >= 80)  { bg='rgba(0,195,238,.18)';  tc='var(--text)'; dot='<div class="cal-dot" style="background:#00c3ee"></div>'; }
+      else if (pct >= 60)  { bg='rgba(198,48,0,.18)';   tc='var(--text)'; dot='<div class="cal-dot" style="background:#c63000"></div>'; }
+      else if (pct >= 40)  { bg='rgba(74,158,255,.18)'; tc='var(--text)'; dot='<div class="cal-dot" style="background:#4a9eff"></div>'; }
+      else if (pct >= 20)  { bg='rgba(255,100,0,.18)';  tc='var(--text)'; dot='<div class="cal-dot" style="background:#ff6400"></div>'; }
+      else                 { bg='rgba(85,18,155,.22)';  tc='var(--text)'; dot='<div class="cal-dot" style="background:#55129b"></div>'; }
+    }
+
+    const ring = isToday ? 'box-shadow:0 0 0 2px var(--accent);' : '';
+    html += `<div class="cal-day${isFuture?' future':''}${isToday?' today':''}"
+      style="background:${bg};color:${tc};${ring}" data-date="${ds}">
+      <span class="cal-day-n">${day}</span>${dot}
+    </div>`;
+  }
+
+  document.getElementById('calGrid').innerHTML = html;
+  document.querySelectorAll('.cal-day:not(.empty):not(.future)').forEach(el => {
+    el.addEventListener('click', () => showDayDetail(el.dataset.date));
+  });
+}
+
+function showDayDetail(ds) {
+  const entries = S.logs[ds] || [];
+  if (!entries.length) return;
+  const d = new Date(ds + 'T12:00:00');
+  document.getElementById('dayModalDate').textContent =
+    d.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+  document.getElementById('dayModalSub').textContent = entries.length + ' drink' + (entries.length===1?'':'s') + ' logged';
+  const tot = netTotal(ds);
+  document.getElementById('dayModalTotal').innerHTML =
+    fmt(Math.max(0, tot), S.unit) + ' <span style="font-size:14px;color:var(--text2)">net water</span>';
+  document.getElementById('dayModalList').innerHTML = entries.map(e => `
+    <div class="day-modal-item">
+      <span style="font-size:20px">${e.emoji}</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500">${e.name}</div>
+        <div style="font-size:12px;color:var(--text2)">${e.time}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:600">${fmt(e.amtMl,S.unit)}</div>
+        <div style="font-size:11px;color:var(--text2)">${e.netMl>=0?'+':''}${fmt(e.netMl,S.unit)} net</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('dayModal').classList.remove('hidden');
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const id = tab==='today'?'vToday':tab==='add'?'vAdd':'vHistory';
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  if (tab==='today')   renderToday();
+  if (tab==='add')     { S.q=''; document.getElementById('searchIn').value=''; renderBevs(); }
+  if (tab==='history') renderCal();
+}
+
+// ── EVENTS ─────────────────────────────────────────────────────────────────────
+function init() {
+  load();
+
+  document.querySelectorAll('.nav-item').forEach(b =>
+    b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+  document.querySelectorAll('.cat-pill').forEach(p =>
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.cat-pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      S.cat = p.dataset.cat;
+      renderBevs();
+    }));
+
+  document.getElementById('searchIn').addEventListener('input', e => {
+    S.q = e.target.value;
+    renderBevs();
+  });
+
+  document.getElementById('amtIn').addEventListener('input', updatePreview);
+  document.getElementById('amtIn').addEventListener('keydown', e => { if (e.key==='Enter') logDrink(); });
+
+  document.getElementById('uMl').addEventListener('click', () => setUnit('ml'));
+  document.getElementById('uOz').addEventListener('click', () => setUnit('oz'));
+  document.getElementById('sUml').addEventListener('click', () => setUnit('ml'));
+  document.getElementById('sUoz').addEventListener('click', () => setUnit('oz'));
+
+  document.getElementById('addBtn').addEventListener('click', logDrink);
+  document.getElementById('backdrop').addEventListener('click', closePanel);
+
+  document.getElementById('settingsBtn').addEventListener('click', () => {
+    syncUnitBtns();
+    document.getElementById('settModal').classList.remove('hidden');
+  });
+  document.getElementById('closeSett').addEventListener('click', () =>
+    document.getElementById('settModal').classList.add('hidden'));
+  document.getElementById('settModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('settModal'))
+      document.getElementById('settModal').classList.add('hidden');
+  });
+
+  document.getElementById('goalIn').addEventListener('change', e => {
+    const v = parseFloat(e.target.value);
+    if (!v || v <= 0) return;
+    S.goal = Math.round(S.unit === 'oz' ? v * OZ : v);
+    save(); renderToday();
+  });
+
+  document.getElementById('prevMo').addEventListener('click', () => {
+    S.calDate = new Date(S.calDate.getFullYear(), S.calDate.getMonth()-1, 1);
+    renderCal();
+  });
+  document.getElementById('nextMo').addEventListener('click', () => {
+    const nxt = new Date(S.calDate.getFullYear(), S.calDate.getMonth()+1, 1);
+    if (nxt <= new Date()) { S.calDate = nxt; renderCal(); }
+  });
+
+  document.getElementById('closeDayModal').addEventListener('click', () =>
+    document.getElementById('dayModal').classList.add('hidden'));
+  document.getElementById('dayModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('dayModal'))
+      document.getElementById('dayModal').classList.add('hidden');
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('Clear all logged data? This cannot be undone.')) {
+      S.logs = {};
+      save();
+      document.getElementById('settModal').classList.add('hidden');
+      toast('All data cleared');
+      renderToday();
+    }
+  });
+
+  syncUnitBtns();
+  switchTab('today');
+}
+
+init();
+</script>
+</body>
+</html>
