@@ -1,7 +1,7 @@
 # AquaNova
 
 I built this because every decent hydration tracker I tried was behind a paywall.
-AquaNova is free and runs as a home screen app (PWA). Just open it in Safari or 
+[AquaNova](https://sanjanagupta02.github.io/aquanova/) is free and runs as a home screen app (PWA). Just open it in Safari or 
 Chrome and add it to your home screen.
 
 As you work through your daily goal, a massive star evolves from a molecular cloud
